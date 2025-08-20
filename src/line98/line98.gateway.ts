@@ -56,7 +56,7 @@ export class Line98Gateway implements OnGatewayConnection, OnGatewayDisconnect {
       const socketId = client.id;
 
       if (!userId || isNaN(userId)) {
-        throw new WsException('');
+        throw new WsException('Invalid user id');
       }
 
       this._setSocket(userId, socketId);
@@ -82,14 +82,14 @@ export class Line98Gateway implements OnGatewayConnection, OnGatewayDisconnect {
     const socketId = client.id;
     const userId = this._getUser(socketId);
     if (!userId) {
-      throw new WsException('');
+      throw new WsException('User not found');
     }
 
     client.emit('line98:connected');
 
     const matchId = this.line98Service.getGameCache(userId);
     if (!matchId || body.matchId != matchId) {
-      throw new WsException('');
+      throw new WsException('Invalid match id');
     }
 
     this._setMatch(userId, matchId);
@@ -104,7 +104,7 @@ export class Line98Gateway implements OnGatewayConnection, OnGatewayDisconnect {
     const socketId = client.id;
     const userId = this._getUser(socketId);
     if (!userId) {
-      throw new WsException('');
+      throw new WsException('User not found');
     }
 
     const matchId = body.matchId;
@@ -125,12 +125,12 @@ export class Line98Gateway implements OnGatewayConnection, OnGatewayDisconnect {
     const socketId = client.id;
     const userId = this._getUser(socketId);
     if (!userId) {
-      throw new WsException('');
+      throw new WsException('User not found');
     }
 
     const gameId = this._getUserInfo(userId)?.matchId;
     if (!gameId) {
-      throw new WsException('');
+      throw new WsException('Game not found');
     }
 
     const help = await this.line98Service.getHelp(gameId);
@@ -144,12 +144,12 @@ export class Line98Gateway implements OnGatewayConnection, OnGatewayDisconnect {
     const socketId = client.id;
     const userId = this._getUser(socketId);
     if (!userId) {
-      throw new WsException('');
+      throw new WsException('User not found');
     }
 
     const gameId = this._getUserInfo(userId)?.matchId;
     if (!gameId) {
-      throw new WsException('');
+      throw new WsException('Game not found');
     }
 
     await this.line98Service.setGameOver(gameId, userId);
@@ -159,7 +159,7 @@ export class Line98Gateway implements OnGatewayConnection, OnGatewayDisconnect {
   private _sendGameOver(userId: number, matchId: number) {
     const socketId = this._getUserInfo(userId)?.socketId;
     if (!socketId) {
-      throw new WsException('');
+      throw new WsException('Socket not found');
     }
 
     this.server.to(socketId).emit('line98:game.over', { matchId });
@@ -168,7 +168,7 @@ export class Line98Gateway implements OnGatewayConnection, OnGatewayDisconnect {
   private _sendMove(userId: number, matchId: number, move: MoveEvent) {
     const socketId = this._getUserInfo(userId)?.socketId;
     if (!socketId) {
-      throw new WsException('');
+      throw new WsException('Socket not found');
     }
 
     this.server.to(socketId).emit('line98:move', { matchId, move });
@@ -177,7 +177,7 @@ export class Line98Gateway implements OnGatewayConnection, OnGatewayDisconnect {
   private _sendHelp(userId: number, help: Move) {
     const socketId = this._getUserInfo(userId)?.socketId;
     if (!socketId) {
-      throw new WsException('');
+      throw new WsException('Socket not found');
     }
 
     this.server.to(socketId).emit('line98:help', help);

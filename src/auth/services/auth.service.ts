@@ -19,6 +19,13 @@ export class AuthService {
     private readonly sessionRepository: Repository<Session>,
   ) {}
 
+  /**
+   * Logs in a user by revoking previous sessions, creating a new session,
+   * and generating access and refresh JWT tokens.
+   * @param userId - The user's ID
+   * @param userName - The user's name
+   * @returns JwtClientToken containing accessToken and refreshToken
+   */
   async login(userId: number, userName: string): Promise<JwtClientToken> {
     await this.revokeByUser(userId);
     const session = await this.createSession(userId);
@@ -46,6 +53,13 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  /**
+   * Refresh the access token using a valid refresh token.
+   * Verifies the refresh token, checks session validity, and issues a new access token.
+   * Revokes session if the refresh token is expired.
+   * @param token - The refresh token
+   * @returns New access token as a string
+   */
   async refresh(token: string): Promise<string> {
     try {
       const { sub, sid, username } =
@@ -92,16 +106,31 @@ export class AuthService {
     }
   }
 
+  /**
+   * Get a session by its ID and user ID, ensuring it is not revoked.
+   * @param id - Session ID
+   * @param userId - User ID
+   * @returns Session object or null if not found
+   */
   async getSession(id: number, userId: number): Promise<Session | null> {
     return this.sessionRepository.findOne({
       where: { id, userId, revoked: false },
     });
   }
 
+  /**
+   * Revokes a session by setting its revoked flag to true.
+   * @param id - Session ID
+   */
   async revokeSession(id: number): Promise<void> {
     await this.sessionRepository.update(id, { revoked: true });
   }
 
+  /**
+   * Creates a new session for a user.
+   * @param userId - User ID
+   * @returns Newly created Session object
+   */
   async createSession(userId: number): Promise<Session> {
     const session = this.sessionRepository.create({
       userId: userId,
@@ -111,6 +140,10 @@ export class AuthService {
     return await this.sessionRepository.save(session);
   }
 
+  /**
+   * Revokes all active sessions for a user.
+   * @param userId - User ID
+   */
   async revokeByUser(userId: number): Promise<void> {
     await this.sessionRepository.update(
       { userId: userId, revoked: false },

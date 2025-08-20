@@ -49,16 +49,15 @@ export class CaroGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const accessToken: string = client.handshake?.auth?.token;
 
       if (!accessToken) {
-        throw new WsException('missing_token');
+        throw new WsException('Missing access token');
       }
 
       const payload = await authWs(this.jwtService, accessToken);
 
       const userId = payload.sub;
-      // console.log(userId);
 
       if (!userId || isNaN(userId)) {
-        throw new WsException('');
+        throw new WsException('Invalid user ID');
       }
 
       this.matchmaker.setSocketId(userId, client.id);
@@ -71,7 +70,7 @@ export class CaroGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       if (await this.caroService.isPlaying(userId)) {
-        throw new WsException('');
+        throw new WsException('User is already playing');
       }
 
       const matchId = await this.matchmaker.enqueue(userId);
@@ -109,7 +108,7 @@ export class CaroGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const matchId = this.matchmaker.getActiveMatch(userId);
 
     if (!matchId) {
-      throw new WsException('');
+      throw new WsException('No active match found for user');
     }
 
     const match = await this.caroService.getMatch(matchId);
@@ -118,17 +117,17 @@ export class CaroGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const opponent = state.players.find((p) => p.id != userId);
 
     if (!player || !opponent) {
-      throw new WsException('');
+      throw new WsException('Player or opponent not found');
     }
 
     const timer = this._getTurnTimer(matchId);
     if (!timer) {
-      throw new WsException('');
+      throw new WsException('Turn timer not found');
     }
 
     const opponentInfo = await this.userService.getById(opponent.id);
     if (!opponentInfo) {
-      throw new WsException('');
+      throw new WsException('Opponent info not found');
     }
 
     // this._sendConfig(userId, matchId, config);
@@ -166,7 +165,7 @@ export class CaroGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const player = players.find((p) => p.id == userId);
       if (!player) {
-        throw new WsException('');
+        throw new WsException('Player not found in match');
       }
 
       const X = players[0].symbol == 'X' ? players[0] : players[1];
@@ -225,7 +224,7 @@ export class CaroGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const symbol = caro.state.currentTurn;
       const loser = caro.state.players.find((p) => p.symbol == symbol);
       if (!loser) {
-        throw new WsException('');
+        throw new WsException('Loser not found');
       }
       const winner =
         caro.state.players[0].id == loser?.id
@@ -283,15 +282,6 @@ export class CaroGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const socketId = this.matchmaker.getSocketId(playerId);
     this.server.to(socketId).emit('caro:found', { matchId });
   }
-
-  // private _sendConfig(
-  //   playerId: number,
-  //   matchId: number,
-  //   config: ConfigInterface,
-  // ) {
-  //   const socketId = this.matchmaker.getSocketId(playerId);
-  //   this.server.to(socketId).emit('caro:config', { matchId, config });
-  // }
 
   private _sendGameResult(
     playerId: number,

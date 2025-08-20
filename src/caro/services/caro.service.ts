@@ -34,6 +34,11 @@ export class CaroService {
     return CaroConfig;
   }
 
+  /**
+   * Get caro.id that player is playing
+   * @param userId User id
+   * @returns number or null
+   */
   async getPlayingGame(userId: number): Promise<number | null> {
     const gameUser = await this.gameService.getPlayingGame(
       userId,
@@ -49,6 +54,11 @@ export class CaroService {
     return game?.id ?? null;
   }
 
+  /**
+   * Create game
+   * @param users List id
+   * @returns CaroState
+   */
   async createGame(users: number[]) {
     const config = this.getConfig();
 
@@ -87,6 +97,12 @@ export class CaroService {
     return caro;
   }
 
+  /**
+   * Make a move in the Caro game
+   * @param caroId Caro game ID
+   * @param move Move object
+   * @returns CaroState
+   */
   async makeMove(caroId: number, move: Move): Promise<CaroState> {
     if (this.isLocking(caroId)) {
       throw new Error('');
@@ -150,6 +166,14 @@ export class CaroService {
     // return await this.caroRepository.save(caro);
   }
 
+  /**
+   * Check if the move results in a win
+   * @param board Game board
+   * @param row Row index
+   * @param col Column index
+   * @param config Game config
+   * @returns boolean
+   */
   checkWin(
     board: string[][],
     row: number,
@@ -202,6 +226,12 @@ export class CaroService {
     return false;
   }
 
+  /**
+   * Check if the game is a draw
+   * @param board Game board
+   * @param config Game config
+   * @returns boolean
+   */
   checkDraw(board: string[][], config: ConfigInterface): boolean {
     const size = config.size;
     // Nếu còn ô trống -> chưa hòa
@@ -215,11 +245,23 @@ export class CaroService {
     return true;
   }
 
+  /**
+   * Start the Caro game
+   * @param caroId Caro game ID
+   * @returns void
+   */
   async startGame(caroId: number) {
     const caro = await this.getMatch(caroId);
     await this.gameService.startGame(caro.gameId);
   }
 
+  /**
+   * Set the winner of the game
+   * @param caroId Caro game ID
+   * @param userId Winner user ID
+   * @param reason End reason
+   * @returns CaroState
+   */
   async setWin(
     caroId: number,
     userId: number,
@@ -245,6 +287,12 @@ export class CaroService {
     return caro;
   }
 
+  /**
+   * Paginate Caro games for a user
+   * @param userId User ID
+   * @param pagination Pagination object
+   * @returns PaginationResponse<CaroState>
+   */
   async paginate(
     userId: number,
     pagination: Pagination,
@@ -268,6 +316,11 @@ export class CaroService {
     };
   }
 
+  /**
+   * Set the game as draw
+   * @param caroId Caro game ID
+   * @returns CaroState
+   */
   async setDraw(caroId: number) {
     let caro = await this.getMatch(caroId);
 
@@ -284,14 +337,29 @@ export class CaroService {
     return caro;
   }
 
+  /**
+   * Check if the user is playing a Caro game
+   * @param userId User ID
+   * @returns boolean
+   */
   async isPlaying(userId: number): Promise<boolean> {
     return this.gameService.isPlaying(userId, GameType.CARO);
   }
 
+   /**
+   * Cache the Caro match
+   * @param caro CaroState object
+   * @returns void
+   */
   setCache(caro: CaroState) {
     this.matchCache.set(caro.id, caro);
   }
 
+   /**
+   * Get Caro match by ID
+   * @param id Caro game ID
+   * @returns CaroState
+   */
   async getMatch(id: number): Promise<CaroState> {
     let caro = this.matchCache.get(id) ?? null;
     if (!caro) {
@@ -314,14 +382,29 @@ export class CaroService {
     return caro;
   }
 
+  /**
+   * Check if the game is locked
+   * @param id Caro game ID
+   * @returns boolean
+   */
   isLocking(id: number): boolean {
     return this.gameLocks.get(id) ?? false;
   }
 
+  /**
+   * Lock the game
+   * @param id Caro game ID
+   * @returns void
+   */
   lockGame(id: number) {
     this.gameLocks.set(id, true);
   }
 
+  /**
+   * Unlock the game
+   * @param id Caro game ID
+   * @returns void
+   */
   unlockGame(id: number) {
     this.gameLocks.set(id, false);
   }
